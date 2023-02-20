@@ -1,0 +1,46 @@
+{
+  "version": "0.2",
+  "phases": {
+      "pre_build": {
+          "commands": [
+            "REPO_TAG=$(date '+%Y%m%d%H%M%S')",
+            "IMAGE_VERSION_TAG=$REPO_NAME-$(date '+%Y%m%d%H%M%S')",
+            "[ -f *.sh ] && chmod +x *.sh",                                                                                
+            "[ -f ./pre-build.sh ] && ./pre-build.sh",   
+            "echo Logging in to Amazon ECR...",
+            "aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ACCT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com",
+          ]
+      },
+      "build": {
+          "commands": [
+              "echo Build started on `date`",
+              "[ -f ./build.sh ] && ./build.sh",                          
+              "echo login to IronBank...",
+              "echo $IB_PASS | docker login registry1.dso.mil -u $IB_USER --password-stdin",
+              "echo Building the Docker image...",
+              "docker build -t $REPO_NAME:$REPO_TAG . --build-arg BASE_DATE=$REPO_TAG",
+              "docker tag $REPO_NAME:$REPO_TAG $ECR_URI:$IMAGE_VERSION_TAG",
+          ]
+      },
+      "post_build": {
+          "commands": [
+              "echo Build completed on `date`",
+              "[ -f ./post-build.sh ] && ./post-build.sh",                          
+              "echo Pushing the Docker image...",
+              "docker push $ECR_URI:$IMAGE_VERSION_TAG",
+              "printf '[{\"name\":\"Docker-Image\",\"imageUri\":\"%s\"}]' \"$ECR_URI:$IMAGE_VERSION_TAG\" > image.json",
+              "cat image.json"                         
+          ]
+      }
+  },
+  "shell": "bash",
+  "artifact": {
+      "files": "image.json"
+  },
+  "env": {
+      "secrets-manager" : {
+          'IB_USER'  : "/amtrak/devsecops/codebuild/ironbank/credentials:user",
+          'IB_PASS'  : "/amtrak/devsecops/codebuild/ironbank/credentials:password",
+      }    
+  },
+}

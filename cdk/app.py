@@ -7,6 +7,7 @@ import yaml
 
 from stacks.webhook_stack import WebhookStack
 from stacks.scanner_stack import ScannerStack
+from stacks.build_stack import BuildStack
 from pprint import pprint
 
 config=yaml.safe_load(open('config.yaml'))
@@ -17,6 +18,7 @@ env_main = cdk.Environment(
     region=config['env']['region']
     )
 props={}
+namespace = 'ironbank-rhel-ubi-python-3-9'
 
 app = cdk.App()
 
@@ -38,5 +40,16 @@ scanner_stack = ScannerStack(
         region="us-east-1"       
     ),    
 )
+
+build_stack = BuildStack(
+    app, 
+    f"{namespace}",    #Set the stack name.
+    namespace,         #This propagates through.
+    env=Environment(
+        account=os.environ.get("CDK_DEPLOY_ACCOUNT", os.environ["CDK_DEFAULT_ACCOUNT"]),
+        region="us-east-1"       
+    )
+)
+Tags.of(build_stack).add("ApplicationGroup", "DevOpsAutomation2021")
 
 app.synth()
