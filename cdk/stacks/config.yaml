@@ -1,0 +1,16 @@
+app:
+  namespace: "auto-docker-webhook"
+images:
+  ironbank:
+    jdk8:
+      name: "ironbank-docker-jdk8"         #This needs to match the Bitbucket image repository name.
+      generic: "True"
+    jdk11:
+      name: "ironbank-rhel-ubi-jdk11"      #This needs to match the Bitbucket image repository name.
+      generic: "True"
+    python39:
+      name: "ironbank-rhel-ubi-python-3-9" #This needs to match the Bitbucket image repository name.
+      generic: "True"
+env:
+  id: "111111111111"
+  region: "us-east-1"
